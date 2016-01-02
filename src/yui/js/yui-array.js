@@ -113,7 +113,7 @@ YArray.dedupe = Lang._isNative(Object.create) ? function (array) {
 
 /**
 Executes the supplied function on each item in the array. This method wraps
-the native ES5 `Array.forEach()` method if available.
+the native ES5 `Array.forEach()` method.
 
 @method each
 @param {Array} array Array to iterate.
@@ -126,16 +126,8 @@ the native ES5 `Array.forEach()` method if available.
 @return {YUI} The YUI instance.
 @static
 **/
-YArray.each = YArray.forEach = Lang._isNative(Native.forEach) ? function (array, fn, thisObj) {
+YArray.each = YArray.forEach = function (array, fn, thisObj) {
     Native.forEach.call(array || [], fn, thisObj || Y);
-    return Y;
-} : function (array, fn, thisObj) {
-    for (var i = 0, len = (array && array.length) || 0; i < len; ++i) {
-        if (i in array) {
-            fn.call(thisObj || Y, array[i], i, array);
-        }
-    }
-
     return Y;
 };
 
@@ -181,7 +173,7 @@ YArray.hash = function (keys, values) {
 Returns the index of the first item in the array that's equal (using a strict
 equality check) to the specified _value_, or `-1` if the value isn't found.
 
-This method wraps the native ES5 `Array.indexOf()` method if available.
+This method wraps the native ES5 `Array.indexOf()` method.
 
 @method indexOf
 @param {Array} array Array to search.
@@ -191,30 +183,8 @@ This method wraps the native ES5 `Array.indexOf()` method if available.
     found.
 @static
 **/
-YArray.indexOf = Lang._isNative(Native.indexOf) ? function (array, value, from) {
+YArray.indexOf = function (array, value, from) {
     return Native.indexOf.call(array, value, from);
-} : function (array, value, from) {
-    // http://es5.github.com/#x15.4.4.14
-    var len = array.length;
-
-    from = +from || 0;
-    from = (from > 0 || -1) * Math.floor(Math.abs(from));
-
-    if (from < 0) {
-        from += len;
-
-        if (from < 0) {
-            from = 0;
-        }
-    }
-
-    for (; from < len; ++from) {
-        if (from in array && array[from] === value) {
-            return from;
-        }
-    }
-
-    return -1;
 };
 
 /**
@@ -256,16 +226,8 @@ value from the function will stop the processing of remaining items.
   items in the array; `false` otherwise.
 @static
 **/
-YArray.some = Lang._isNative(Native.some) ? function (array, fn, thisObj) {
+YArray.some = function (array, fn, thisObj) {
     return Native.some.call(array, fn, thisObj);
-} : function (array, fn, thisObj) {
-    for (var i = 0, len = array.length; i < len; ++i) {
-        if (i in array && fn.call(thisObj, array[i], i, array)) {
-            return true;
-        }
-    }
-
-    return false;
 };
 
 /**

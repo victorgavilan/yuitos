@@ -2752,7 +2752,7 @@ YArray.dedupe = Lang._isNative(Object.create) ? function (array) {
 
 /**
 Executes the supplied function on each item in the array. This method wraps
-the native ES5 `Array.forEach()` method if available.
+the native ES5 `Array.forEach()` method.
 
 @method each
 @param {Array} array Array to iterate.
@@ -2765,16 +2765,8 @@ the native ES5 `Array.forEach()` method if available.
 @return {YUI} The YUI instance.
 @static
 **/
-YArray.each = YArray.forEach = Lang._isNative(Native.forEach) ? function (array, fn, thisObj) {
+YArray.each = YArray.forEach = function (array, fn, thisObj) {
     Native.forEach.call(array || [], fn, thisObj || Y);
-    return Y;
-} : function (array, fn, thisObj) {
-    for (var i = 0, len = (array && array.length) || 0; i < len; ++i) {
-        if (i in array) {
-            fn.call(thisObj || Y, array[i], i, array);
-        }
-    }
-
     return Y;
 };
 
@@ -2820,7 +2812,7 @@ YArray.hash = function (keys, values) {
 Returns the index of the first item in the array that's equal (using a strict
 equality check) to the specified _value_, or `-1` if the value isn't found.
 
-This method wraps the native ES5 `Array.indexOf()` method if available.
+This method wraps the native ES5 `Array.indexOf()` method.
 
 @method indexOf
 @param {Array} array Array to search.
@@ -2830,30 +2822,8 @@ This method wraps the native ES5 `Array.indexOf()` method if available.
     found.
 @static
 **/
-YArray.indexOf = Lang._isNative(Native.indexOf) ? function (array, value, from) {
+YArray.indexOf = function (array, value, from) {
     return Native.indexOf.call(array, value, from);
-} : function (array, value, from) {
-    // http://es5.github.com/#x15.4.4.14
-    var len = array.length;
-
-    from = +from || 0;
-    from = (from > 0 || -1) * Math.floor(Math.abs(from));
-
-    if (from < 0) {
-        from += len;
-
-        if (from < 0) {
-            from = 0;
-        }
-    }
-
-    for (; from < len; ++from) {
-        if (from in array && array[from] === value) {
-            return from;
-        }
-    }
-
-    return -1;
 };
 
 /**
@@ -2895,16 +2865,8 @@ value from the function will stop the processing of remaining items.
   items in the array; `false` otherwise.
 @static
 **/
-YArray.some = Lang._isNative(Native.some) ? function (array, fn, thisObj) {
+YArray.some = function (array, fn, thisObj) {
     return Native.some.call(array, fn, thisObj);
-} : function (array, fn, thisObj) {
-    for (var i = 0, len = array.length; i < len; ++i) {
-        if (i in array && fn.call(thisObj, array[i], i, array)) {
-            return true;
-        }
-    }
-
-    return false;
 };
 
 /**
@@ -3311,32 +3273,14 @@ var Lang   = Y.Lang,
 
 /**
  * Returns a new object that uses _obj_ as its prototype. This method wraps the
- * native ES5 `Object.create()` method if available, but doesn't currently
- * pass through `Object.create()`'s second argument (properties) in order to
- * ensure compatibility with older browsers.
+ * native ES5 `Object.create()`
  *
  * @method ()
  * @param {Object} obj Prototype object.
  * @return {Object} New object using _obj_ as its prototype.
  * @static
  */
-O = Y.Object = Lang._isNative(Object.create) ? function (obj) {
-    // We currently wrap the native Object.create instead of simply aliasing it
-    // to ensure consistency with our fallback shim, which currently doesn't
-    // support Object.create()'s second argument (properties). Once we have a
-    // safe fallback for the properties arg, we can stop wrapping
-    // Object.create().
-    return Object.create(obj);
-} : (function () {
-    // Reusable constructor function for the Object.create() shim.
-    function F() {}
-
-    // The actual shim.
-    return function (obj) {
-        F.prototype = obj;
-        return new F();
-    };
-}()),
+O = Y.Object = Object.create,
 
 /**
  * Property names that IE doesn't enumerate in for..in loops, even when they
@@ -3418,10 +3362,7 @@ O.hasKey = owns;
  * that they would be enumerated by a `for-in` loop), which may not be the same
  * as the order in which they were defined.
  *
- * This method is an alias for the native ES5 `Object.keys()` method if
- * available and non-buggy. The Opera 11.50 and Android 2.3.x versions of
- * `Object.keys()` have an inconsistency as they consider `prototype` to be
- * enumerable, so a non-native shim is used to rectify the difference.
+ * This method is an alias for the native `Object.keys()` method.
  *
  * @example
  *
@@ -3433,40 +3374,7 @@ O.hasKey = owns;
  * @return {String[]} Array of keys.
  * @static
  */
-O.keys = Lang._isNative(Object.keys) && !hasProtoEnumBug ? Object.keys : function (obj) {
-    if (!Lang.isObject(obj)) {
-        throw new TypeError('Object.keys called on a non-object');
-    }
-
-    var keys = [],
-        i, key, len;
-
-    if (hasProtoEnumBug && typeof obj === 'function') {
-        for (key in obj) {
-            if (owns(obj, key) && key !== 'prototype') {
-                keys.push(key);
-            }
-        }
-    } else {
-        for (key in obj) {
-            if (owns(obj, key)) {
-                keys.push(key);
-            }
-        }
-    }
-
-    if (hasEnumBug) {
-        for (i = 0, len = forceEnum.length; i < len; ++i) {
-            key = forceEnum[i];
-
-            if (owns(obj, key)) {
-                keys.push(key);
-            }
-        }
-    }
-
-    return keys;
-};
+O.keys = Object.keys;
 
 /**
  * Returns an array containing the values of the object's enumerable keys.

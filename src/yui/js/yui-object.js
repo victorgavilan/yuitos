@@ -19,32 +19,14 @@ var Lang   = Y.Lang,
 
 /**
  * Returns a new object that uses _obj_ as its prototype. This method wraps the
- * native ES5 `Object.create()` method if available, but doesn't currently
- * pass through `Object.create()`'s second argument (properties) in order to
- * ensure compatibility with older browsers.
+ * native ES5 `Object.create()`
  *
  * @method ()
  * @param {Object} obj Prototype object.
  * @return {Object} New object using _obj_ as its prototype.
  * @static
  */
-O = Y.Object = Lang._isNative(Object.create) ? function (obj) {
-    // We currently wrap the native Object.create instead of simply aliasing it
-    // to ensure consistency with our fallback shim, which currently doesn't
-    // support Object.create()'s second argument (properties). Once we have a
-    // safe fallback for the properties arg, we can stop wrapping
-    // Object.create().
-    return Object.create(obj);
-} : (function () {
-    // Reusable constructor function for the Object.create() shim.
-    function F() {}
-
-    // The actual shim.
-    return function (obj) {
-        F.prototype = obj;
-        return new F();
-    };
-}()),
+O = Y.Object = Object.create,
 
 /**
  * Property names that IE doesn't enumerate in for..in loops, even when they
@@ -64,22 +46,6 @@ forceEnum = O._forceEnum = [
     'toLocaleString',
     'valueOf'
 ],
-
-/**
- * `true` if this browser has the JScript enumeration bug that prevents
- * enumeration of the properties named in the `_forceEnum` array, `false`
- * otherwise.
- *
- * See:
- *   - <https://developer.mozilla.org/en/ECMAScript_DontEnum_attribute#JScript_DontEnum_Bug>
- *   - <http://whattheheadsaid.com/2010/10/a-safer-object-keys-compatibility-implementation>
- *
- * @property _hasEnumBug
- * @type Boolean
- * @protected
- * @static
- */
-hasEnumBug = O._hasEnumBug = !{valueOf: 0}.propertyIsEnumerable('valueOf'),
 
 /**
  * `true` if this browser incorrectly considers the `prototype` property of
@@ -126,10 +92,7 @@ O.hasKey = owns;
  * that they would be enumerated by a `for-in` loop), which may not be the same
  * as the order in which they were defined.
  *
- * This method is an alias for the native ES5 `Object.keys()` method if
- * available and non-buggy. The Opera 11.50 and Android 2.3.x versions of
- * `Object.keys()` have an inconsistency as they consider `prototype` to be
- * enumerable, so a non-native shim is used to rectify the difference.
+ * This method is an alias for the native `Object.keys()` method.
  *
  * @example
  *
@@ -141,40 +104,7 @@ O.hasKey = owns;
  * @return {String[]} Array of keys.
  * @static
  */
-O.keys = Lang._isNative(Object.keys) && !hasProtoEnumBug ? Object.keys : function (obj) {
-    if (!Lang.isObject(obj)) {
-        throw new TypeError('Object.keys called on a non-object');
-    }
-
-    var keys = [],
-        i, key, len;
-
-    if (hasProtoEnumBug && typeof obj === 'function') {
-        for (key in obj) {
-            if (owns(obj, key) && key !== 'prototype') {
-                keys.push(key);
-            }
-        }
-    } else {
-        for (key in obj) {
-            if (owns(obj, key)) {
-                keys.push(key);
-            }
-        }
-    }
-
-    if (hasEnumBug) {
-        for (i = 0, len = forceEnum.length; i < len; ++i) {
-            key = forceEnum[i];
-
-            if (owns(obj, key)) {
-                keys.push(key);
-            }
-        }
-    }
-
-    return keys;
-};
+O.keys = Object.keys;
 
 /**
  * Returns an array containing the values of the object's enumerable keys.
